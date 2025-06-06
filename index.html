@@ -558,13 +558,18 @@
       <div class="result-item">
         <span class="result-label">📧 Address:</span>
         <div class="result-value" id="addressValue">
+          <span id="addressText"></span>
           <button class="copy-button" onclick="copyToClipboard('addressValue')">Copy</button>
         </div>
       </div>
 
       <div class="result-item">
-        <span class="result-label">🔑 Mnemonic Phrase:</span>
+        <span class="result-label">
+          🔑 Mnemonic Phrase:
+          <button id="toggleMnemonicVisibilityButton" title="Toggle visibility" style="background: none; border: none; cursor: pointer; margin-left: 5px; vertical-align: middle; font-size: 1em;">👁️</button>
+        </span>
         <div class="result-value" id="mnemonicValue">
+          <span id="mnemonicText"></span>
           <button class="copy-button" onclick="copyToClipboard('mnemonicValue')">Copy</button>
         </div>
       </div>
@@ -576,23 +581,53 @@
   <script>
     // Global utility function for copying to clipboard
     async function copyToClipboard(elementId) {
-      const element = document.getElementById(elementId);
-      const text = element.textContent.replace('Copy', '').trim();
-      
+      let textToCopy = '';
+      if (elementId === 'mnemonicValue') {
+        if (window.vanityApp && typeof window.vanityApp.actualMnemonic === 'string') {
+          textToCopy = window.vanityApp.actualMnemonic;
+        } else {
+          const mnemonicTextElement = document.getElementById('mnemonicText');
+          if (mnemonicTextElement) textToCopy = mnemonicTextElement.textContent;
+          if (textToCopy.includes('•')) {
+            // Avoid copying placeholder if actual mnemonic isn't available for some reason
+            return;
+          }
+        }
+      } else if (elementId === 'addressValue') {
+        const addressTextElement = document.getElementById('addressText');
+        if (addressTextElement) {
+          textToCopy = addressTextElement.textContent;
+        } else {
+          // Should not happen, but good to guard
+          return;
+        }
+      } else {
+        // Unknown ID
+        return;
+      }
+
+      if (!textToCopy) {
+        // If, after all checks, textToCopy is empty (e.g. address not generated yet), do nothing.
+        return;
+      }
+
       try {
-        await navigator.clipboard.writeText(text);
-        const button = element.querySelector('.copy-button');
-        const originalText = button.textContent;
-        button.textContent = '✓';
-        button.style.backgroundColor = 'var(--success-color)';
-        
-        setTimeout(() => {
-          button.textContent = originalText;
-          button.style.backgroundColor = 'var(--primary-color)';
-        }, 2000);
+        await navigator.clipboard.writeText(textToCopy);
+        // Visual feedback
+        const containerElement = document.getElementById(elementId);
+        const button = containerElement.querySelector('.copy-button');
+        if (button) {
+            const originalText = button.textContent;
+            button.textContent = '✓';
+            button.style.backgroundColor = 'var(--success-color)';
+            setTimeout(() => {
+              button.textContent = originalText;
+              button.style.backgroundColor = 'var(--primary-color)';
+            }, 2000);
+        }
       } catch (err) {
-        console.error('Failed to copy text: ', err);
-        alert('Failed to copy to clipboard');
+        // console.error('Failed to copy text: ', err); // Kept for debugging if needed
+        alert('Failed to copy to clipboard.'); // User-friendly message
       }
     }
   </script>
