@@ -368,7 +368,7 @@ class VanityGeneratorApp {
     }
 
     if (!validate_target_string(target)) {
-      feedback.textContent = 'Invalid characters - use only: 0-9, a-z (except "b", "i", "o", "1")';
+      feedback.textContent = 'Please use valid characters - only: 0-9, a-z (excluding b, i, o)'; // THIS LINE NEEDS TO CHANGE
       feedback.className = 'feedback error';
       return false;
     }
